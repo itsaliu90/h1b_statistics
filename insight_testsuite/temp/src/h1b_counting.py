@@ -3,6 +3,7 @@ print('Running script!')
 
 import sys
 import pdb
+import operator
 
 # Useful paths
 path_to_input_file = sys.argv[1]
@@ -76,7 +77,7 @@ occupations_dictionary = {}
 states_dictionary = {}
 
 for row in body_array:
-	occupation = row[occupation_column_index]
+	occupation = row[occupation_column_index].strip('\"')
 	state = row[state_column_index]
 
 	if row[status_column_index] == "CERTIFIED":
@@ -90,15 +91,48 @@ for row in body_array:
 		else:
 			states_dictionary[state] += 1
 
+# Get the sum for each dictionary
+occupations_sum = float(sum(occupations_dictionary.values()))
+states_sum = float(sum(states_dictionary.values()))
+
 print('Occupations Dictionary')
 print(occupations_dictionary)
 
 print('State Dictionary')
 print(states_dictionary)
 
-# Write to output files
+# Need to sort by Certified Applications
+sorted_occupations_list = sorted(occupations_dictionary.items(), key=lambda x: (-x[1], x[0]))
+sorted_states_list = sorted(states_dictionary.items(), key=lambda x: (-x[1], x[0]))
+
+print('Sorted Occupations List')
+print(sorted_occupations_list)
+
+print('Sorted States List')
+print(sorted_states_list)
+
+# Write to Occupations file
 top_10_occupations_file = open(path_to_top_10_occupations_output_file, "w")
+top_10_occupations_file.write("TOP_OCCUPATIONS;NUMBER_CERTIFIED_APPLICATIONS;PERCENTAGE\n")
+i = 0
+while i < 10:
+	if i > len(sorted_occupations_list) - 1:
+		break
+	occupation, count = sorted_occupations_list[i]
+	top_10_occupations_file.write("%s;%s;%s%%\n" % (occupation, count, round(count/occupations_sum*100., 1)))
+	i += 1
 top_10_occupations_file.close()
 
+# Write to States file
 top_10_states_file = open(path_to_top_10_states_output_file, "w")
+top_10_states_file.write("TOP_STATES;NUMBER_CERTIFIED_APPLICATIONS;PERCENTAGE\n")
+
+j = 0
+while j < 10:
+	if j > len(sorted_states_list) - 1:
+		break
+	state, count = sorted_states_list[j]
+	top_10_states_file.write("%s;%s;%s%%\n" % (state, count, round(count/states_sum*100., 1)))
+	j += 1
+
 top_10_states_file.close()
